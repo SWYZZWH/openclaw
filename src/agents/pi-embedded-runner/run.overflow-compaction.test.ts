@@ -283,4 +283,40 @@ describe("overflow compaction in run loop", () => {
     expect(mockedRunEmbeddedAttempt).toHaveBeenCalledTimes(1);
     expect(result.meta.error?.kind).toBe("compaction_failure");
   });
+
+  it("forwards thread context (currentChannelId, currentThreadTs, messageThreadId) to compaction", async () => {
+    const overflowError = new Error("request_too_large: Request size exceeds model context window");
+
+    const threadParams = {
+      ...baseParams,
+      currentChannelId: "C123SLACK",
+      currentThreadTs: "1709312345.678900",
+      messageThreadId: "1709312345.678900",
+    };
+
+    mockedRunEmbeddedAttempt
+      .mockResolvedValueOnce(makeAttemptResult({ promptError: overflowError }))
+      .mockResolvedValueOnce(makeAttemptResult({ promptError: null }));
+
+    mockedCompactDirect.mockResolvedValueOnce({
+      ok: true,
+      compacted: true,
+      result: {
+        summary: "Compacted session",
+        firstKeptEntryId: "entry-5",
+        tokensBefore: 150000,
+      },
+    });
+
+    await runEmbeddedPiAgent(threadParams);
+
+    expect(mockedCompactDirect).toHaveBeenCalledTimes(1);
+    expect(mockedCompactDirect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentChannelId: "C123SLACK",
+        currentThreadTs: "1709312345.678900",
+        messageThreadId: "1709312345.678900",
+      }),
+    );
+  });
 });
