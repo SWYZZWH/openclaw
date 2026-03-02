@@ -84,6 +84,12 @@ export type CompactEmbeddedPiSessionParams = {
   groupSpace?: string | null;
   /** Parent session key for subagent policy inheritance. */
   spawnedBy?: string | null;
+  /** Current Slack/Discord channel ID – survives compaction so the agent can read thread history. */
+  currentChannelId?: string;
+  /** Current thread timestamp – survives compaction so the agent can read thread history. */
+  currentThreadTs?: string;
+  /** Thread id passed to the message tool for auto-threading replies. */
+  messageThreadId?: string | number;
   sessionFile: string;
   workspaceDir: string;
   agentDir?: string;
@@ -230,6 +236,9 @@ export async function compactEmbeddedPiSessionDirect(
       modelProvider: model.provider,
       modelId,
       modelAuthMode: resolveModelAuthMode(model.provider, params.config),
+      currentChannelId: params.currentChannelId,
+      currentThreadTs: params.currentThreadTs,
+      messageThreadId: params.messageThreadId,
     });
     const tools = sanitizeToolsForGoogle({ tools: toolsRaw, provider });
     logToolSchemasForGoogle({ tools, provider });

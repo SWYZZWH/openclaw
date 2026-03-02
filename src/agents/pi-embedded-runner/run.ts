@@ -398,6 +398,9 @@ export async function runEmbeddedPiAgent(
                   bashElevated: params.bashElevated,
                   extraSystemPrompt: params.extraSystemPrompt,
                   ownerNumbers: params.ownerNumbers,
+                  currentChannelId: params.currentChannelId,
+                  currentThreadTs: params.currentThreadTs,
+                  messageThreadId: params.messageThreadId,
                 });
                 if (compactResult.compacted) {
                   log.info(`auto-compaction succeeded for ${provider}/${modelId}; retrying prompt`);

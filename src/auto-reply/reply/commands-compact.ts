@@ -10,6 +10,7 @@ import { resolveSessionFilePath } from "../../config/sessions.js";
 import { logVerbose } from "../../globals.js";
 import { enqueueSystemEvent } from "../../infra/system-events.js";
 import { formatContextUsageShort, formatTokenCount } from "../status.js";
+import { buildThreadingToolContext } from "./agent-runner-utils.js";
 import { stripMentions, stripStructuralPrefixes } from "./mentions.js";
 import { incrementCompactionCount } from "./session-updates.js";
 
@@ -71,6 +72,11 @@ export const handleCompactCommand: CommandHandler = async (params) => {
     agentId: params.agentId,
     isGroup: params.isGroup,
   });
+  const threadingContext = buildThreadingToolContext({
+    sessionCtx: params.ctx,
+    config: params.cfg,
+    hasRepliedRef: undefined,
+  });
   const result = await compactEmbeddedPiSession({
     sessionId,
     sessionKey: params.sessionKey,
@@ -79,6 +85,9 @@ export const handleCompactCommand: CommandHandler = async (params) => {
     groupChannel: params.sessionEntry.groupChannel,
     groupSpace: params.sessionEntry.space,
     spawnedBy: params.sessionEntry.spawnedBy,
+    currentChannelId: threadingContext.currentChannelId,
+    currentThreadTs: threadingContext.currentThreadTs,
+    messageThreadId: params.ctx.MessageThreadId ?? undefined,
     sessionFile: resolveSessionFilePath(sessionId, params.sessionEntry),
     workspaceDir: params.workspaceDir,
     config: params.cfg,
